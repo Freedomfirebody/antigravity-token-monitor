@@ -29,10 +29,10 @@
     </div>
 
     {#if !state.config.exportStepsJsonl}
-      <div class="warning-card" role="status" aria-live="polite">
-        <div class="warning-title">Message count needs step export</div>
-        <div class="warning-copy">
-          `antigravity-token-monitor.exportStepsJsonl` is off, so `steps.jsonl` is not exported and message counts may stay at 0.
+      <div class="info-card" role="status" aria-live="polite">
+        <div class="info-title">Step export: metadata only</div>
+        <div class="info-copy">
+          `exportStepsJsonl` is off — steps are exported with metadata only (role, timestamp, model). Message counts work normally. Enable to include full conversation text.
         </div>
       </div>
     {/if}
@@ -111,23 +111,23 @@
   .mono {
     font-family: var(--code-font);
   }
-  .warning-card {
-    border: 1px solid rgba(247, 200, 115, 0.3);
-    background: rgba(247, 200, 115, 0.08);
+  .info-card {
+    border: 1px solid rgba(130, 170, 227, 0.3);
+    background: rgba(130, 170, 227, 0.08);
     border-radius: 8px;
     padding: var(--spacing-sm);
     display: flex;
     flex-direction: column;
     gap: var(--spacing-xs);
   }
-  .warning-title {
+  .info-title {
     font-size: 11px;
     font-weight: 600;
-    color: var(--warm);
+    color: var(--accent);
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
-  .warning-copy {
+  .info-copy {
     font-size: 11px;
     line-height: 1.5;
     color: var(--text);

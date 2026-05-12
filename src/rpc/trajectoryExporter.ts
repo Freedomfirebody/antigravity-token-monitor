@@ -82,7 +82,9 @@ export class TrajectoryExporter {
             sessionId: candidate.sessionId,
             serverLastModifiedMs: summary.lastModifiedMs,
             stepCount: summary.stepCount,
-            steps: this.config.exportStepsJsonl ? serializeSteps(candidate.sessionId, payload.steps) : undefined,
+            steps: this.config.exportStepsJsonl
+              ? serializeSteps(candidate.sessionId, payload.steps)
+              : serializeStepsRedacted(candidate.sessionId, payload.steps),
             usage: serializeUsage(candidate.sessionId, payload.metadata)
           });
           manifests.set(candidate.sessionId, next);
@@ -194,6 +196,25 @@ function serializeSteps(sessionId: string, steps: unknown[]): unknown[] {
       timestamp: extractTimestamp(record),
       model: extractModel(record),
       text: extractStepText(record)
+    };
+  });
+}
+
+/**
+ * Serializes steps with metadata only (role, timestamp, model) — omits conversation text
+ * to prevent plaintext content from being written to disk when exportStepsJsonl is off.
+ * This still produces `recordType: 'step'` rows so the parser can count messages accurately.
+ */
+function serializeStepsRedacted(sessionId: string, steps: unknown[]): unknown[] {
+  return steps.map((step, index) => {
+    const record = step && typeof step === 'object' ? step as Record<string, unknown> : {};
+    return {
+      recordType: 'step',
+      sessionId,
+      stepIndex: index,
+      role: extractRole(record),
+      timestamp: extractTimestamp(record),
+      model: extractModel(record)
     };
   });
 }
