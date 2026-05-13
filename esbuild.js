@@ -34,14 +34,31 @@ async function run() {
     ]
   });
 
+  const sidebarCtx = await esbuild.context({
+    entryPoints: {
+      'sidebar/main': 'src/webview/sidebar/main.ts'
+    },
+    bundle: true,
+    outdir: 'dist',
+    format: 'iife',
+    platform: 'browser',
+    target: ['es2020'],
+    sourcemap: true,
+    plugins: [
+      esbuildSvelte({
+        compilerOptions: { css: 'injected' }
+      })
+    ]
+  });
+
   if (watch) {
-    await Promise.all([extensionCtx.watch(), webviewCtx.watch()]);
+    await Promise.all([extensionCtx.watch(), webviewCtx.watch(), sidebarCtx.watch()]);
     console.log('Watching antigravity-token-monitor...');
     return;
   }
 
-  await Promise.all([extensionCtx.rebuild(), webviewCtx.rebuild()]);
-  await Promise.all([extensionCtx.dispose(), webviewCtx.dispose()]);
+  await Promise.all([extensionCtx.rebuild(), webviewCtx.rebuild(), sidebarCtx.rebuild()]);
+  await Promise.all([extensionCtx.dispose(), webviewCtx.dispose(), sidebarCtx.dispose()]);
 }
 
 run().catch((error) => {

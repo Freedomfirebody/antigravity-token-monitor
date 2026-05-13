@@ -1,0 +1,209 @@
+{
+  "planId": "858121a3",
+  "title": "Sidebar Webview (Token Overview)",
+  "status": "Active",
+  "created": "2026-05-12",
+  "designRef": "docs/plans/designs/001-sidebar-webview.md",
+  "trackerRef": "docs/plans/work/001-sidebar-webview.md",
+  "complexity": "Medium",
+  "phases": [
+    {
+      "id": 1,
+      "name": "Infrastructure",
+      "tasks": [1, 2, 3, 4, 6],
+      "parallel": true
+    },
+    {
+      "id": 2,
+      "name": "Provider + Entry",
+      "tasks": [5, 7],
+      "parallel": false
+    },
+    {
+      "id": 3,
+      "name": "UI Components",
+      "tasks": [8, 9, 10, 11, 12, 13, 14],
+      "parallel": false
+    },
+    {
+      "id": 4,
+      "name": "Integration + Verification",
+      "tasks": [15, 16],
+      "parallel": false
+    }
+  ],
+  "tasks": [
+    {
+      "id": 1,
+      "title": "package.json: viewsContainers + views + activationEvents 추가",
+      "agent": "frontend",
+      "priority": "P0",
+      "status": "TODO",
+      "dependencies": [],
+      "effort": "S",
+      "files": ["package.json"]
+    },
+    {
+      "id": 2,
+      "title": "types.ts: Sidebar 메시지 타입 추가",
+      "agent": "frontend",
+      "priority": "P0",
+      "status": "TODO",
+      "dependencies": [],
+      "effort": "S",
+      "files": ["src/types.ts"]
+    },
+    {
+      "id": 3,
+      "title": "vscodeApi.ts 제네릭화 VsCodeApiWrapper<TMessage>",
+      "agent": "frontend",
+      "priority": "P0",
+      "status": "TODO",
+      "dependencies": [],
+      "effort": "S",
+      "files": ["src/webview/lib/vscodeApi.ts"]
+    },
+    {
+      "id": 4,
+      "title": "getSidebarHtml.ts 작성 — 사이드바 전용 HTML 셸",
+      "agent": "frontend",
+      "priority": "P0",
+      "status": "TODO",
+      "dependencies": [],
+      "effort": "S",
+      "files": ["src/webview/getSidebarHtml.ts"]
+    },
+    {
+      "id": 5,
+      "title": "sidebarViewProvider.ts 작성 — WebviewViewProvider 구현",
+      "agent": "frontend",
+      "priority": "P0",
+      "status": "TODO",
+      "dependencies": [2, 4],
+      "effort": "M",
+      "files": ["src/webview/sidebarViewProvider.ts"]
+    },
+    {
+      "id": 6,
+      "title": "esbuild.js: sidebar 빌드 엔트리 추가",
+      "agent": "frontend",
+      "priority": "P0",
+      "status": "TODO",
+      "dependencies": [],
+      "effort": "S",
+      "files": ["esbuild.js"]
+    },
+    {
+      "id": 7,
+      "title": "sidebar/main.ts 작성 — 사이드바 webview 엔트리 포인트",
+      "agent": "frontend",
+      "priority": "P0",
+      "status": "TODO",
+      "dependencies": [2, 3],
+      "effort": "S",
+      "files": ["src/webview/sidebar/main.ts"]
+    },
+    {
+      "id": 8,
+      "title": "SidebarApp.svelte 작성 — 루트 컴포넌트 + 레이아웃",
+      "agent": "frontend",
+      "priority": "P0",
+      "status": "TODO",
+      "dependencies": [7],
+      "effort": "M",
+      "files": ["src/webview/sidebar/SidebarApp.svelte"]
+    },
+    {
+      "id": 9,
+      "title": "SidebarKpi.svelte — 토큰/세션/비용 KPI 카드",
+      "agent": "frontend",
+      "priority": "P0",
+      "status": "TODO",
+      "dependencies": [8],
+      "effort": "M",
+      "files": ["src/webview/sidebar/components/SidebarKpi.svelte"]
+    },
+    {
+      "id": 10,
+      "title": "SidebarTokenMix.svelte — 토큰 타입별 가로 바 차트",
+      "agent": "frontend",
+      "priority": "P1",
+      "status": "TODO",
+      "dependencies": [8],
+      "effort": "M",
+      "files": ["src/webview/sidebar/components/SidebarTokenMix.svelte"]
+    },
+    {
+      "id": 11,
+      "title": "SidebarModelUsage.svelte — 모델별 사용량 축소 바",
+      "agent": "frontend",
+      "priority": "P1",
+      "status": "TODO",
+      "dependencies": [8],
+      "effort": "M",
+      "files": ["src/webview/sidebar/components/SidebarModelUsage.svelte"]
+    },
+    {
+      "id": 12,
+      "title": "SidebarHeatmap.svelte — 최근 30일 미니 히트맵",
+      "agent": "frontend",
+      "priority": "P1",
+      "status": "TODO",
+      "dependencies": [8],
+      "effort": "M",
+      "files": ["src/webview/sidebar/components/SidebarHeatmap.svelte"]
+    },
+    {
+      "id": 13,
+      "title": "SidebarSessionList.svelte — 세션 리스트 (접기/펼치기)",
+      "agent": "frontend",
+      "priority": "P1",
+      "status": "TODO",
+      "dependencies": [8],
+      "effort": "M",
+      "files": ["src/webview/sidebar/components/SidebarSessionList.svelte"]
+    },
+    {
+      "id": 14,
+      "title": "SidebarSyncStatus.svelte — 동기화 상태 인디케이터",
+      "agent": "frontend",
+      "priority": "P1",
+      "status": "TODO",
+      "dependencies": [8],
+      "effort": "S",
+      "files": ["src/webview/sidebar/components/SidebarSyncStatus.svelte"]
+    },
+    {
+      "id": 15,
+      "title": "extension.ts: SidebarViewProvider 등록 + onDidChange 연동",
+      "agent": "frontend",
+      "priority": "P0",
+      "status": "TODO",
+      "dependencies": [5],
+      "effort": "S",
+      "files": ["src/extension.ts"]
+    },
+    {
+      "id": 16,
+      "title": "빌드 검증 + typecheck",
+      "agent": "qa",
+      "priority": "P0",
+      "status": "TODO",
+      "dependencies": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+      "effort": "S",
+      "acceptance": [
+        "npm run compile 성공 (3개 번들)",
+        "npm run typecheck 통과",
+        "npm run typecheck:webview 통과"
+      ]
+    }
+  ],
+  "doneWhen": [
+    "Activity Bar에 Antigravity Token Monitor 아이콘 표시",
+    "사이드바 클릭 시 Webview로 KPI, 토큰 브레이크다운, 모델 사용량, 히트맵, 세션 리스트 표시",
+    "TokenMonitorService 상태 변경 시 사이드바 실시간 업데이트",
+    "사이드바에서 Open Dashboard 클릭 시 풀 대시보드 열림",
+    "npm run typecheck 및 npm run typecheck:webview 통과",
+    "npm run compile 성공 (3개 번들 모두 생성)"
+  ]
+}

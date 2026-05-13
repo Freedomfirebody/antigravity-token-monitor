@@ -23,6 +23,7 @@ antigravity-storage-manager/
 
 
 .ralph/
+docs/plans/
 
 test-rpc*.ts
 test-invalid-id.ts

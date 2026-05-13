@@ -22,6 +22,7 @@
   ],
   "activationEvents": [
     "onStartupFinished",
+    "onView:antigravity-token-monitor.sidebarView",
     "onCommand:antigravity-token-monitor.openDashboard",
     "onCommand:antigravity-token-monitor.refreshNow",
     "onCommand:antigravity-token-monitor.exportNow",
@@ -29,6 +30,24 @@
   ],
   "main": "./dist/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "antigravity-token-monitor",
+          "title": "Antigravity Token Monitor",
+          "icon": "$(graph)"
+        }
+      ]
+    },
+    "views": {
+      "antigravity-token-monitor": [
+        {
+          "type": "webview",
+          "id": "antigravity-token-monitor.sidebarView",
+          "name": "Token Overview"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "antigravity-token-monitor.openDashboard",

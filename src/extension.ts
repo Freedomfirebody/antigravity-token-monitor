@@ -7,6 +7,7 @@ import { AntigravitySessionParser } from './parser/antigravitySessionParser';
 import { SnapshotStore } from './storage/snapshotStore';
 import { TokenStatusBar } from './statusBar/tokenStatusBar';
 import { DashboardPanel } from './webview/dashboardPanel';
+import { SidebarViewProvider } from './webview/sidebarViewProvider';
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   const outputChannel = vscode.window.createOutputChannel('Antigravity Token Monitor');
@@ -27,10 +28,24 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     () => { void service.exportNow({ force: false, refreshAfter: true }); }
   );
   const statusBar = new TokenStatusBar();
+  const sidebarProvider = new SidebarViewProvider(
+    context.extensionUri,
+    () => { void service.exportNow({ force: false, refreshAfter: true }); },
+    () => { void vscode.commands.executeCommand(`${EXTENSION_ID}.openDashboard`); }
+  );
 
-  context.subscriptions.push(service, panel, statusBar, outputChannel);
+  context.subscriptions.push(service, panel, statusBar, sidebarProvider, outputChannel);
+
+  context.subscriptions.push(
+    vscode.window.registerWebviewViewProvider(
+      SidebarViewProvider.viewType,
+      sidebarProvider
+    )
+  );
+
   context.subscriptions.push(service.onDidChange((state) => {
     panel.update(state);
+    sidebarProvider.update(state);
   }));
 
   context.subscriptions.push(vscode.commands.registerCommand(`${EXTENSION_ID}.openDashboard`, async () => {

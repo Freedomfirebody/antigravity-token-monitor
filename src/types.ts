@@ -203,3 +203,13 @@ export type WebviewToExtensionMessage =
 export type ExtensionToWebviewMessage =
   | { type: 'dashboard/state'; payload: DashboardState }
   | { type: 'dashboard/error'; message: string };
+
+export type SidebarToExtensionMessage =
+  | { type: 'sidebar/ready' }
+  | { type: 'sidebar/refresh' }
+  | { type: 'sidebar/openDashboard' }
+  | { type: 'sidebar/openSession'; sessionId: string };
+
+export type ExtensionToSidebarMessage =
+  | { type: 'sidebar/state'; payload: DashboardState }
+  | { type: 'sidebar/error'; message: string };
