@@ -201,20 +201,24 @@ function serializeSteps(sessionId: string, steps: unknown[]): unknown[] {
 }
 
 /**
- * Serializes steps with metadata only (role, timestamp, model) — omits conversation text
+ * Serializes steps with metadata and usage data — omits conversation text (`text` field)
  * to prevent plaintext content from being written to disk when exportStepsJsonl is off.
- * This still produces `recordType: 'step'` rows so the parser can count messages accurately.
+ *
+ * Includes extracted token usage so the parser can derive accurate `reported` mode totals
+ * even when the metadata RPC (`GetCascadeTrajectoryGeneratorMetadata`) returns empty.
  */
 function serializeStepsRedacted(sessionId: string, steps: unknown[]): unknown[] {
   return steps.map((step, index) => {
     const record = step && typeof step === 'object' ? step as Record<string, unknown> : {};
+    const usage = extractUsage(record);
     return {
       recordType: 'step',
       sessionId,
       stepIndex: index,
       role: extractRole(record),
       timestamp: extractTimestamp(record),
-      model: extractModel(record)
+      model: extractModel(record),
+      ...(usage.totalTokens > 0 ? usage : {})
     };
   });
 }
