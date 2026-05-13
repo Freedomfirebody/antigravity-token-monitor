@@ -18,6 +18,7 @@ Antigravity Token Monitor is a VS Code extension that automatically collects, an
 - 🔥 **Real-time Token Tracking** — Automatically monitors token usage across all Antigravity sessions
 - 🕰️ **Historical Session Recovery** — Recovers session data that existed before the extension was started by directly querying the RPC server for sessions missing from the active list
 - 📊 **Interactive Dashboard** — Svelte-based webview with KPI cards, heatmaps, model usage tables, and session leaderboards
+- 📌 **Sidebar Overview** — Activity Bar에 상주하는 미니 대시보드 (KPI, 토큰 브레이크다운, 모델 사용량, 30일 히트맵, 세션 리스트)
 - 💰 **Cost Estimation** — Per-model cost calculation using [LiteLLM](https://github.com/BerriAI/litellm) open-source pricing data
 - 🏷️ **Model Breakdown** — Per-model token breakdown (input, output, cache read/write, reasoning) with automatic resolution of internal model placeholder IDs
 - 📈 **Activity Heatmap** — 180-day activity visualization showing daily token usage and cost patterns
@@ -76,6 +77,8 @@ Then press **F5** in VS Code to launch the Extension Development Host.
 
 You can also click the **token counter** in the status bar to open the dashboard.
 
+**Sidebar**: Activity Bar의 그래프 아이콘을 클릭하면 사이드바에 토큰 사용량 요약이 항상 표시됩니다.
+
 ---
 
 ## Commands
@@ -123,7 +126,7 @@ Data Acquisition → Analysis → Orchestration → Presentation
 
 **Orchestration**: The `TokenMonitorService` coordinates periodic polling, RPC exports, and event emission with debounced updates. A file-based `PollLock` mechanism prevents duplicate processing when multiple VS Code instances are running.
 
-**Presentation**: The `TokenStatusBar` shows a persistent token count, and the `DashboardPanel` renders a Svelte webview with 13 UI components including KPI strips, heatmaps, model tables, session leaderboards, and a real-time refresh countdown timer.
+**Presentation**: The `TokenStatusBar` shows a persistent token count, the `DashboardPanel` renders a Svelte webview with 13 UI components including KPI strips, heatmaps, model tables, session leaderboards, and a real-time refresh countdown timer, and the `SidebarViewProvider` renders a compact WebviewView in the Activity Bar with 6 sidebar-optimized components (KPI, token mix, model usage, mini heatmap, session list, sync status).
 
 For a detailed breakdown, see `docs/architecture.md` in this repository.
 
@@ -144,9 +147,16 @@ src/
 ├── pricing/                   # LiteLLM-based cost estimation
 ├── storage/                   # Persistence (artifacts + snapshots)
 ├── statusBar/                 # VS Code status bar
-└── webview/                   # Svelte dashboard UI
-    ├── components/            #   13 UI components
-    └── lib/                   #   Stores, formatters, utilities
+└── webview/                   # Svelte UI
+    ├── components/            #   13 dashboard components
+    ├── sidebar/               #   Sidebar mini-dashboard
+    │   ├── components/        #     6 sidebar-optimized components
+    │   ├── SidebarApp.svelte  #     Sidebar root
+    │   ├── main.ts            #     Sidebar entry point
+    │   └── sidebarApi.ts      #     Sidebar ↔ extension messaging
+    ├── sidebarViewProvider.ts #   WebviewViewProvider for Activity Bar
+    ├── getSidebarHtml.ts      #   Sidebar HTML shell
+    └── lib/                   #   Shared stores, formatters, utilities
 ```
 
 ---
@@ -190,7 +200,7 @@ npm run test:webview
 5. **JSONL Serialization** — Normalizes metadata into `usage.jsonl` records stored under `.token-monitor/rpc-cache/`
 6. **Token Parsing** — Extracts model-specific token breakdowns (input, output, cache, reasoning) from structured records, or estimates from text length as fallback
 7. **Cost Calculation** — Matches models against [LiteLLM's open-source pricing catalog](https://github.com/BerriAI/litellm) to compute USD costs
-8. **Visualization** — Renders data in the status bar and a Svelte webview dashboard with a real-time refresh countdown
+8. **Visualization** — Renders data in the status bar, a sidebar mini-dashboard (Activity Bar), and a full Svelte webview dashboard with a real-time refresh countdown
 
 ---
 
