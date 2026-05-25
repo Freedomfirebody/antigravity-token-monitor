@@ -206,6 +206,10 @@ function buildModelAliases(model: string): string[] {
   }
 
   const aliases = new Set<string>([normalized]);
+  if (normalized === 'gemini-pro-default' || normalized === 'gemini-pro-agent') {
+    aliases.add('gemini-3.1-pro-high');
+    aliases.add('gemini-3.1-pro');
+  }
   const trimmedQuality = normalized.replace(/-(high|low|c)$/u, '');
   aliases.add(trimmedQuality);
   aliases.add(trimmedQuality.replace(/-(thinking|medium)$/u, ''));

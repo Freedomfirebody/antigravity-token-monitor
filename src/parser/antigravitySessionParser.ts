@@ -1,19 +1,12 @@
-import * as fs from 'fs/promises';
+import * as fsPromises from 'fs/promises';
+import * as fs from 'fs';
+import * as readline from 'readline';
 import * as path from 'path';
 import { resolveModelPlaceholder } from '../modelAliases';
 import { ModelTokenBreakdown, SessionParsePlan, SessionTotals, TokenBreakdown } from '../types';
 
 const TEXT_EXTENSIONS = new Set(['.json', '.jsonl', '.md', '.txt', '.log', '.yaml', '.yml']);
 const LABEL_FILES = ['task.md', 'implementation_plan.md', 'walkthrough.md'];
-
-type StructuredSignalResult = {
-  breakdown: TokenBreakdown;
-  hits: number;
-  text: string;
-  messageCount: number;
-  modelTotals: Record<string, number>;
-  modelBreakdowns: Record<string, ModelTokenBreakdown>;
-};
 
 export class AntigravitySessionParser {
   constructor(private readonly maxFileBytes: number) {}
@@ -24,129 +17,92 @@ export class AntigravitySessionParser {
     const modelBreakdowns: Record<string, ModelTokenBreakdown> = {};
     let messageCount = 0;
     let evidenceCount = 0;
-    let estimatedText = '';
-    console.warn(`[DEBUG] parse: tokenFilePaths=${candidate.tokenFilePaths?.join(' | ')}`);
+    let estimatedTextLength = 0;
+
     for (const filePath of candidate.tokenFilePaths) {
-      const parsed = await this.readFileContent(filePath);
-      if (!parsed) {
+      const ext = path.extname(filePath).toLowerCase();
+      if (!TEXT_EXTENSIONS.has(ext)) {
         continue;
       }
 
-      const { content } = parsed;
-      const ext = path.extname(filePath).toLowerCase();
-      if (ext === '.json' || ext === '.jsonl') {
-        const {
-          breakdown,
-          hits,
-          text,
-          messageCount: parsedMessageCount,
-          modelTotals: parsedModelTotals,
-          modelBreakdowns: parsedModelBreakdowns
-        } = extractStructuredSignals(content, ext);
-        mergeBreakdown(reported, breakdown);
-        mergeModelTotals(modelTotals, parsedModelTotals);
-        mergeModelBreakdowns(modelBreakdowns, parsedModelBreakdowns);
-        evidenceCount += hits;
-        messageCount += parsedMessageCount;
-        estimatedText += text;
-      } else {
-        estimatedText += `\n${content}`;
+      try {
+        const stat = await fsPromises.stat(filePath);
+
+        if (ext === '.jsonl') {
+          const fileStream = fs.createReadStream(filePath);
+          const rl = readline.createInterface({
+            input: fileStream,
+            crlfDelay: Infinity
+          });
+
+          const isStepsFile = path.basename(filePath).toLowerCase() === 'steps.jsonl' || path.basename(filePath).toLowerCase() === 'transcript.jsonl';
+
+          for await (const line of rl) {
+            const trimmed = line.trim();
+            if (!trimmed) {
+              continue;
+            }
+
+            estimatedTextLength += trimmed.length + 1;
+            try {
+              const parsed = JSON.parse(trimmed) as unknown;
+              messageCount += countStepRows(parsed);
+              if (!isStepsFile) {
+                const signal = walkForTokenSignals(parsed);
+                mergeBreakdown(reported, signal.breakdown);
+                mergeModelTotals(modelTotals, signal.modelTotals);
+                mergeModelBreakdowns(modelBreakdowns, signal.modelBreakdowns);
+                evidenceCount += signal.hits;
+              }
+            } catch {
+              // Ignore line parse errors
+            }
+          }
+        } else if (ext === '.json') {
+          const content = await fsPromises.readFile(filePath, 'utf8');
+          estimatedTextLength += content.length;
+          try {
+            const parsed = JSON.parse(content) as unknown;
+            messageCount = countMessages(parsed);
+            const signal = walkForTokenSignals(parsed);
+            mergeBreakdown(reported, signal.breakdown);
+            mergeModelTotals(modelTotals, signal.modelTotals);
+            mergeModelBreakdowns(modelBreakdowns, signal.modelBreakdowns);
+            evidenceCount += signal.hits;
+          } catch {
+            // Ignore parse errors
+          }
+        } else {
+          // For .md, .txt, .log, .yaml, .yml: no need to read them! Just add their size to estimated length!
+          estimatedTextLength += stat.size;
+        }
+      } catch (error) {
+        console.warn(`[antigravity-token-monitor] Failed to parse ${filePath}:`, error);
       }
     }
 
     const label = await this.resolveLabel(candidate);
-    console.warn(`[DEBUG] parse result: evidenceCount=${evidenceCount} mode=${evidenceCount > 0 ? 'reported' : 'estimated'}`);
-    return evidenceCount > 0 ? finalizeReported(candidate, label, reported, modelTotals, modelBreakdowns, evidenceCount, messageCount) : finalizeEstimated(candidate, label, estimatedText, messageCount);
+    return evidenceCount > 0
+      ? finalizeReported(candidate, label, reported, modelTotals, modelBreakdowns, evidenceCount, messageCount)
+      : finalizeEstimatedWithLength(candidate, label, estimatedTextLength, messageCount);
   }
 
   private async resolveLabel(candidate: SessionParsePlan): Promise<string> {
     for (const labelFile of LABEL_FILES) {
       const filePath = path.join(candidate.sessionDir, labelFile);
-      const content = await this.readFileContent(filePath);
-      if (!content) {
-        continue;
-      }
-
-      const headingMatch = content.content.match(/^#\s*(?:Task:?\s*)?(.+)$/im);
-      if (headingMatch?.[1]) {
-        return headingMatch[1].trim();
+      try {
+        const content = await fsPromises.readFile(filePath, 'utf8');
+        const headingMatch = content.match(/^#\s*(?:Task:?\s*)?(.+)$/im);
+        if (headingMatch?.[1]) {
+          return headingMatch[1].trim();
+        }
+      } catch {
+        // Skip missing files
       }
     }
 
     return candidate.labelHint;
   }
-
-  private async readFileContent(filePath: string): Promise<{ content: string } | null> {
-    const ext = path.extname(filePath).toLowerCase();
-    if (!TEXT_EXTENSIONS.has(ext)) {
-      return null;
-    }
-
-    try {
-      const stat = await fs.stat(filePath);
-      console.warn(`[DEBUG] readFileContent: ${filePath} size=${stat.size} max=${this.maxFileBytes} skip=${stat.size > this.maxFileBytes}`);
-      if (stat.size > this.maxFileBytes) {
-        return null;
-      }
-
-      return { content: await fs.readFile(filePath, 'utf8') };
-    } catch (error) {
-      console.warn(`[antigravity-token-monitor] Failed to read ${filePath}:`, error);
-      return null;
-    }
-  }
-}
-
-function extractStructuredSignals(content: string, ext: string): StructuredSignalResult {
-  const breakdown = emptyBreakdown();
-  let hits = 0;
-  let messageCount = 0;
-  let extractedText = '';
-  const modelTotals: Record<string, number> = {};
-  const modelBreakdowns: Record<string, ModelTokenBreakdown> = {};
-
-  if (ext === '.jsonl') {
-    const lines = content.split(/\r?\n/);
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed) {
-        continue;
-      }
-
-      extractedText += `\n${trimmed}`;
-      try {
-        const parsed = JSON.parse(trimmed) as unknown;
-        messageCount += countStepRows(parsed);
-        const signal = walkForTokenSignals(parsed);
-        mergeBreakdown(breakdown, signal.breakdown);
-        mergeModelTotals(modelTotals, signal.modelTotals);
-        mergeModelBreakdowns(modelBreakdowns, signal.modelBreakdowns);
-        hits += signal.hits;
-      } catch {
-      }
-    }
-
-    return { breakdown, hits, text: extractedText, messageCount, modelTotals, modelBreakdowns };
-  }
-
-  const trimmed = content.trim();
-  if (!trimmed) {
-    return { breakdown, hits, text: extractedText, messageCount, modelTotals, modelBreakdowns };
-  }
-
-  extractedText += `\n${trimmed}`;
-  try {
-    const parsed = JSON.parse(content) as unknown;
-        messageCount = countMessages(parsed);
-    const signal = walkForTokenSignals(parsed);
-    mergeBreakdown(breakdown, signal.breakdown);
-    mergeModelTotals(modelTotals, signal.modelTotals);
-    mergeModelBreakdowns(modelBreakdowns, signal.modelBreakdowns);
-    hits += signal.hits;
-  } catch {
-  }
-
-  return { breakdown, hits, text: extractedText, messageCount, modelTotals, modelBreakdowns };
 }
 
 type SignalResult = {
@@ -331,8 +287,8 @@ function finalizeReported(
   };
 }
 
-function finalizeEstimated(candidate: SessionParsePlan, label: string, text: string, messageCount: number): SessionTotals {
-  const estimatedTotal = estimateTokens(text);
+function finalizeEstimatedWithLength(candidate: SessionParsePlan, label: string, textLength: number, messageCount: number): SessionTotals {
+  const estimatedTotal = Math.max(1, Math.round(textLength / 4));
   return {
     sessionId: candidate.sessionId,
     label,
@@ -351,15 +307,6 @@ function finalizeEstimated(candidate: SessionParsePlan, label: string, text: str
     reasoningTokens: 0,
     totalTokens: estimatedTotal
   };
-}
-
-function estimateTokens(text: string): number {
-  const normalized = text.trim();
-  if (!normalized) {
-    return 0;
-  }
-
-  return Math.max(1, Math.round(normalized.length / 4));
 }
 
 function emptyBreakdown(): TokenBreakdown {

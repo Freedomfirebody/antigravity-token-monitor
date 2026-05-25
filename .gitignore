@@ -4,6 +4,7 @@ coverage/
 .vscode/
 .vscode-test/
 .sisyphus/
+.idea/*
 
 antigravity-storage-manager/
 
@@ -21,7 +22,7 @@ antigravity-storage-manager/
 *.cer
 *.der
 
-
+*/target/*
 .ralph/
 docs/plans/
 

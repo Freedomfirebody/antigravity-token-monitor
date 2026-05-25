@@ -8,15 +8,15 @@
  */
 
 const PLACEHOLDER_MODEL_MAP: Record<string, string> = {
-  // Gemini 3.5 Pro / Pro Default
-  'MODEL_PLACEHOLDER_M16': 'gemini-3.5-pro',
-  'gemini-pro-default': 'gemini-3.5-pro',
-  'gemini-pro-agent': 'gemini-3.5-pro',
+  // Gemini 3.1 Pro (formerly mapped to 3.5 Pro placeholder)
+  'MODEL_PLACEHOLDER_M16': 'gemini-3.1-pro-high',
 
   // Gemini 3.5 Flash
   'MODEL_PLACEHOLDER_M133': 'gemini-3.5-flash',
   'gemini-3-flash-b': 'gemini-3.5-flash',
   'gemini-3-flash-agent': 'gemini-3.5-flash',
+  'MODEL_PLACEHOLDER_M187': 'gemini-3.5-flash',
+  'MODEL_PLACEHOLDER_M20': 'gemini-3.5-flash',
 
   // Gemini 3.1 Pro
   'MODEL_PLACEHOLDER_M37': 'gemini-3.1-pro-high',
@@ -49,6 +49,8 @@ const PLACEHOLDER_MODEL_MAP: Record<string, string> = {
   'MODEL_OPENAI_GPT_OSS_120B_MEDIUM': 'gpt-oss-120b-medium',
   'MODEL_CLAUDE_4_5_SONNET': 'claude-sonnet-4-5',
   'MODEL_CLAUDE_4_5_SONNET_THINKING': 'claude-sonnet-4-5-thinking',
+  'MODEL_GOOGLE_GEMINI_2_5_FLASH': 'gemini-2.5-flash',
+  'MODEL_GOOGLE_GEMINI_2_5_FLASH_LITE': 'gemini-2.5-flash-lite',
 };
 
 /**
