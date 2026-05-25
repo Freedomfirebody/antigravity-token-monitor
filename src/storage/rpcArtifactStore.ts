@@ -31,7 +31,7 @@ export class RpcArtifactStore {
     const results = await Promise.all(candidates.map(async (filePath) => {
       try {
         const stat = await fs.stat(filePath);
-        return stat.isFile() ? filePath : null;
+        return stat.isFile() && stat.size > 0 ? filePath : null;
       } catch {
         return null;
       }

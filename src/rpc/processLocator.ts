@@ -68,7 +68,38 @@ export class ProcessLocator {
 
   private async detectProcesses(): Promise<ProcessCandidate[]> {
     if (os.platform() === 'win32') {
-      return [];
+      const allCandidates: ProcessCandidate[] = [];
+      try {
+        const cmd = 'powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -like \'*antigravity*\' -or $_.Name -like \'*language_server*\' } | ForEach-Object { [PSCustomObject]@{ pid = $_.ProcessId; ppid = $_.ParentProcessId; command = $_.CommandLine } } | ConvertTo-Json"';
+        const stdout = await runCommand(cmd);
+        if (stdout.trim()) {
+          const parsed = JSON.parse(stdout);
+          const items = Array.isArray(parsed) ? parsed : [parsed];
+          for (const item of items) {
+            if (!item || typeof item !== 'object') continue;
+            const pid = Number(item.pid);
+            const ppid = Number(item.ppid);
+            const command = String(item.command || '');
+            if (!pid || !ppid || !command) continue;
+
+            const portMatch = command.match(/--extension_server_port[=\s]+(\d+)/i);
+            const tokenMatch = command.match(/--csrf_token[=\s]+([a-f0-9-]+)/i);
+            if (!tokenMatch?.[1]) {
+              continue;
+            }
+
+            allCandidates.push({
+              pid,
+              ppid,
+              extensionPort: portMatch?.[1] ? Number.parseInt(portMatch[1], 10) : 0,
+              csrfToken: tokenMatch[1]
+            });
+          }
+        }
+      } catch (err) {
+        this.log?.(`ProcessLocator: Windows process detection failed: ${err}`);
+      }
+      return dedupeProcesses(allCandidates);
     }
 
     const allCandidates: ProcessCandidate[] = [];
@@ -87,6 +118,14 @@ export class ProcessLocator {
 
   private async getListeningPorts(pid: number): Promise<number[]> {
     const isDarwin = os.platform() === 'darwin';
+    const isWindows = os.platform() === 'win32';
+
+    if (isWindows) {
+      const stdout = await runCommand(`netstat -ano`);
+      const lines = stdout.split('\n').filter(line => line.trim().endsWith(String(pid)));
+      const filteredStdout = lines.join('\n');
+      return parsePorts(filteredStdout);
+    }
 
     // 1차 시도: -iTCP -sTCP:LISTEN (정확하지만 IPv6 전용 포트는 누락 가능)
     // 2차 fallback: -i (더 넓게 탐색 — IPv6 *:port 형식도 포함)

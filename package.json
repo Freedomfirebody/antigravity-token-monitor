@@ -26,7 +26,8 @@
     "onCommand:antigravity-token-monitor.openDashboard",
     "onCommand:antigravity-token-monitor.refreshNow",
     "onCommand:antigravity-token-monitor.exportNow",
-    "onCommand:antigravity-token-monitor.resetCache"
+    "onCommand:antigravity-token-monitor.resetCache",
+    "onCommand:antigravity-token-monitor.forceRebuild"
   ],
   "main": "./dist/extension.js",
   "contributes": {
@@ -68,6 +69,11 @@
         "command": "antigravity-token-monitor.resetCache",
         "title": "Antigravity Token Monitor: Reset Cache",
         "icon": "$(trash)"
+      },
+      {
+        "command": "antigravity-token-monitor.forceRebuild",
+        "title": "Antigravity Token Monitor: Force Rebuild (Clear All & Rescan)",
+        "icon": "$(debug-restart)"
       }
     ],
     "configuration": {

@@ -25,7 +25,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 
   const panel = new DashboardPanel(
     context.extensionUri,
-    () => { void service.exportNow({ force: false, refreshAfter: true }); }
+    () => { void service.exportNow({ force: false, refreshAfter: true }); },
+    () => { void vscode.commands.executeCommand(`${EXTENSION_ID}.forceRebuild`); }
   );
   const statusBar = new TokenStatusBar();
   const sidebarProvider = new SidebarViewProvider(
@@ -84,6 +85,28 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
       void vscode.window.showErrorMessage(`Reset cache failed: ${message}`);
+    }
+  }));
+
+  context.subscriptions.push(vscode.commands.registerCommand(`${EXTENSION_ID}.forceRebuild`, async () => {
+    const confirm = await vscode.window.showWarningMessage(
+      'Antigravity Token Monitor: This will clear all cached data and rebuild everything from scratch. All historical snapshots will be reset. Continue?',
+      { modal: true },
+      'Force Rebuild'
+    );
+    if (confirm !== 'Force Rebuild') {
+      return;
+    }
+
+    try {
+      const clearedCount = await service.resetCache();
+      panel.show(service.getDashboardState());
+      void vscode.window.showInformationMessage(
+        `Force rebuild complete: cleared ${clearedCount} session cache${clearedCount === 1 ? '' : 's'} and rebuilt from scratch.`
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      void vscode.window.showErrorMessage(`Force rebuild failed: ${message}`);
     }
   }));
 

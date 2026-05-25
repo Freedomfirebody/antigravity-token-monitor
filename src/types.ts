@@ -198,7 +198,8 @@ export type DashboardState = {
 
 export type WebviewToExtensionMessage =
   | { type: 'dashboard/ready' }
-  | { type: 'dashboard/refresh' };
+  | { type: 'dashboard/refresh' }
+  | { type: 'dashboard/forceRebuild' };
 
 export type ExtensionToWebviewMessage =
   | { type: 'dashboard/state'; payload: DashboardState }

@@ -42,6 +42,7 @@ export class TrajectoryExporter {
 
       for (const candidate of candidates) {
         let summary = summaryById.get(candidate.sessionId);
+        const inActiveRpc = !!summary;
         if (!summary) {
           unmatchedCount += 1;
           // 목록에서 누락된 경우, 파일 시스템의 메타데이터를 기반으로 강제 조회 시도 (Fallback)
@@ -53,6 +54,14 @@ export class TrajectoryExporter {
         }
 
         const previous = await this.artifactStore.loadManifest(candidate.sessionId);
+
+        // Prevent data loss: if session is inactive in RPC summaries and has a valid previous export, reuse it.
+        // Re-exporting an inactive session from Language Server will yield empty arrays and overwrite valid cache files.
+        if (!inActiveRpc && previous?.artifactHash && (previous?.failureCount ?? 0) === 0) {
+          this.log?.(`TrajectoryExporter: session=${candidate.sessionId} is inactive on RPC and has valid previous export; reusing previous.`);
+          manifests.set(candidate.sessionId, previous);
+          continue;
+        }
         const force = options?.force === true;
         const selectiveForce = options?.selectiveForce === true;
         const shouldForceThisSession = force || (
@@ -460,6 +469,10 @@ function preferredModel(...values: unknown[]): string | undefined {
     .map((value) => value.trim());
 
   for (const candidate of candidates) {
+    const resolved = resolveModelPlaceholder(candidate);
+    if (resolved) {
+      return resolved;
+    }
     if (!isPlaceholderModel(candidate)) {
       return candidate;
     }

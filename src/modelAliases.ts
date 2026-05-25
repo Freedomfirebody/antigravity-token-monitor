@@ -8,9 +8,21 @@
  */
 
 const PLACEHOLDER_MODEL_MAP: Record<string, string> = {
+  // Gemini 3.5 Pro / Pro Default
+  'MODEL_PLACEHOLDER_M16': 'gemini-3.5-pro',
+  'gemini-pro-default': 'gemini-3.5-pro',
+  'gemini-pro-agent': 'gemini-3.5-pro',
+
+  // Gemini 3.5 Flash
+  'MODEL_PLACEHOLDER_M133': 'gemini-3.5-flash',
+  'gemini-3-flash-b': 'gemini-3.5-flash',
+  'gemini-3-flash-agent': 'gemini-3.5-flash',
+
   // Gemini 3.1 Pro
   'MODEL_PLACEHOLDER_M37': 'gemini-3.1-pro-high',
   'MODEL_PLACEHOLDER_M36': 'gemini-3.1-pro-low',
+  'gemini-3.1-pro-low': 'gemini-3.1-pro-low',
+  'gemini-3.1-pro-high': 'gemini-3.1-pro-high',
 
   // Gemini 3 Flash
   'MODEL_PLACEHOLDER_M18': 'gemini-3-flash',
@@ -24,9 +36,11 @@ const PLACEHOLDER_MODEL_MAP: Record<string, string> = {
 
   // Claude Opus 4.6 (Thinking)
   'MODEL_PLACEHOLDER_M26': 'claude-opus-4-6-thinking',
+  'claude-opus-4-6-thinking': 'claude-opus-4-6-thinking',
 
   // Claude Sonnet 4.6 (Thinking)
   'MODEL_PLACEHOLDER_M35': 'claude-sonnet-4-6-thinking',
+  'claude-sonnet-4-6-thinking': 'claude-sonnet-4-6-thinking',
 
   // Claude Opus 4.5 (Thinking) — legacy, redirected to Opus 4.6
   'MODEL_PLACEHOLDER_M12': 'claude-opus-4-5-thinking',

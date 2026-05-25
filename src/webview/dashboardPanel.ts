@@ -11,7 +11,8 @@ export class DashboardPanel implements vscode.Disposable {
 
   constructor(
     private readonly extensionUri: vscode.Uri,
-    private readonly onRefresh: () => void
+    private readonly onRefresh: () => void,
+    private readonly onForceRebuild?: () => void
   ) {}
 
   show(state: DashboardState): void {
@@ -53,6 +54,11 @@ export class DashboardPanel implements vscode.Disposable {
 
         if (message.type === 'dashboard/refresh') {
           this.onRefresh();
+          return;
+        }
+
+        if (message.type === 'dashboard/forceRebuild') {
+          this.onForceRebuild?.();
           return;
         }
       }, null, this.disposables);

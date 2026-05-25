@@ -52,6 +52,10 @@
   function handleRefresh() {
     vscodeApi.postMessage({ type: 'dashboard/refresh' });
   }
+
+  function handleForceRebuild() {
+    vscodeApi.postMessage({ type: 'dashboard/forceRebuild' });
+  }
 </script>
 
 <header class="top-bar">
@@ -79,6 +83,10 @@
       </div>
       <button class="button" on:click={handleRefresh} disabled={state.syncStatus === 'running'}>
         {state.syncStatus === 'running' ? 'Refreshing...' : 'Refresh'}
+      </button>
+      <button class="button button--danger" on:click={handleForceRebuild} disabled={state.syncStatus === 'running'}
+        title="Clear all cached data and rebuild from scratch">
+        ↻ Rebuild
       </button>
     </div>
   </div>
@@ -149,6 +157,16 @@
   .button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+  }
+  .button--danger {
+    border-color: var(--danger, #ef7d78);
+    color: var(--danger, #ef7d78);
+    font-size: 11px;
+  }
+  .button--danger:hover:not(:disabled) {
+    border-color: var(--danger, #ef7d78);
+    background: rgba(239, 125, 120, 0.1);
+    color: var(--danger, #ef7d78);
   }
   .status-pill {
     display: inline-flex;

@@ -474,6 +474,10 @@ function preferredModel(...values: unknown[]): string | undefined {
     .map((value) => value.trim());
 
   for (const candidate of candidates) {
+    const resolved = resolveModelPlaceholder(candidate);
+    if (resolved) {
+      return resolved;
+    }
     if (!isPlaceholderModel(candidate)) {
       return candidate;
     }
