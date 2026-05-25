@@ -35,3 +35,8 @@ dist/**
 !dist/**/*.js
 !package.json
 !README.md
+.agents/**
+.gemini/**
+.idea/**
+.serena/**
+single_app/**
